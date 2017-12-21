@@ -2,8 +2,10 @@ function App() {
 	var canvas,
 	    ctx;
 
+	var progressBar = null;
+
 	var modalManager = null;
-	var audioManager = null;
+	var am = null;
 
 	var triggers = [];
 	var dots = [];
@@ -13,12 +15,16 @@ function App() {
 	var BPM = 90;
 	var channels = null;
 
+	var clickedElem = null;
+
 	this.init = function() {
 		canvas = document.createElement('canvas');
 		canvas.width = W = window.innerWidth;
 		canvas.height = H = window.innerHeight;
 		ctx = canvas.getContext('2d');
 		document.body.appendChild(canvas);
+
+		progressBar = $('progress');
 
 		am = new AudioManager();
 		am.remember('kick', 'audios/kick2.mp3');
@@ -46,16 +52,33 @@ function App() {
 			});
 		}
 
+		var mousePressed = false;
+		window.addEventListener('mousedown', function(e) {
+			if (mousePressed) return;
+
+			if (e.target.id == 'play')
+				playPause();
+			else if (e.target.id == 'stop') {
+				playPause();
+				am.stop();
+			}
+
+			clickedElem = e.target;
+			mousePressed = true;
+		}, false);
+
+		window.addEventListener('mouseup', function(e) {
+			if (!mousePressed) return;
+
+			clickedElem = null;
+			mousePressed = false;
+		}, false);
+
 		window.addEventListener('keydown', function(e) {
 			if (pressed) return;
 			pressed = true;
 			if (e.keyCode == 32) {
-				dots.push({
-					x: triggers[0].x + 10,
-					y: 10,
-					width: 30,
-					height: 30
-				});
+				playPause();
 			}
 		}, false);
 
@@ -64,6 +87,10 @@ function App() {
 		}, false);
 	
 		loop();
+	}
+	function playPause() {
+		am.playPause();
+		$('play').innerHTML = !am.isPlaying ? "&#9658;" : "&#10074;&#10074;";
 	}
 
 	function loop() {
@@ -80,6 +107,7 @@ function App() {
 
 	function update() {
 		am.playChannel(channels);
+		progressBar.style.width = am.playingProgress() * 100 + '%';
 	}
 	
 	function render() {
@@ -95,5 +123,9 @@ function App() {
 			let d = dots[i];
 			ctx.fillRect(d.x, d.y, d.width, d.height);
 		}
+	}
+
+	function $(id) {
+		return document.getElementById(id);
 	}
 }

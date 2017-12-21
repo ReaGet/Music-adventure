@@ -23,6 +23,8 @@ function AudioManager() {
 	var channels = {};
 	var links = {};
 
+	this.isPlaying = false;
+
 	function load(name, src) {
 		total++;
 		let audio = new Audio();
@@ -118,12 +120,27 @@ function AudioManager() {
 		if (audios[name]) {
 			audios[name].play();
 		}
-	};
+	}
+
+	function playPause() {
+		this.isPlaying = !this.isPlaying;
+	}
+
+	function stop() {
+		this.isPlaying = false;
+		playOnce = false;
+		currentStep = 0;
+		for (let sample in channels) {
+			let s = channels[sample];
+			s.currentSample = 0;
+		}
+	}
 
 	var currentStep = 0;
 	var playOnce = false;
 
 	function playChannel(channels) {
+		if (!this.isPlaying) return;
 		if (!playOnce) {
 			let timer = window.setTimeout(function() {
 				for (let sample in channels) {
@@ -142,29 +159,20 @@ function AudioManager() {
 			
 			playOnce = true;
 		}
-		// if (!kick.once) {
-		// 	let timer = window.setTimeout(function() {
-		// 		dots.push({
-		// 			x: triggers[0].x + 10,
-		// 			y: 10,
-		// 			width: 30,
-		// 			height: 30
-		// 		});
-		// 		kick.once = false;
-		// 		kick.current++;
-		// 		kick.current %= kick.beat.length;
-		// 		clearTimeout(timer);
-		// 	}, kick.beat[kick.current].d);
-
-		// 	kick.once = true;
-		// }
 	}
+
+	function playingProgress() {
+		return currentStep / maxLengthBeat; 
+	}
+
 
 	this.update = function() {
 		// play('kick');
 	};
 
-
+	this.stop = stop;
+	this.playPause = playPause;
+	this.playingProgress = playingProgress;
 	this.playChannel = playChannel;
 	this.play = play;
 	this.progress = progress;
